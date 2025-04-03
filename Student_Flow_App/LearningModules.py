@@ -239,16 +239,13 @@ def submit_MCQ_Question(request):
         blob_rules_data = json.loads(get_blob('LMS_Rules/Rules.json'))
         blob_rules_data = blob_rules_data.get('mcq')
         score = 0
-        outoff = 0
-        if question_id[-4]=='e':
-            outoff = [i.get('score') for i in blob_rules_data if i.get('level').lower() == 'level1'][0]
-        elif question_id[-4]=='m':
-            outoff = [i.get('score') for i in blob_rules_data if i.get('level').lower() == 'level2'][0]
-        elif question_id[-4]=='h':
-            outoff = [i.get('score') for i in blob_rules_data if i.get('level').lower() == 'level3'][0]
-        
         if data.get('correct_ans') == data.get('entered_ans'):
-                score = int(outoff)
+                if question_id[-4]=='e':
+                    score = [i.get('score') for i in blob_rules_data if i.get('level').lower() == 'level1'][0]
+                elif question_id[-4]=='m':
+                    score = [i.get('score') for i in blob_rules_data if i.get('level').lower() == 'level2'][0]
+                elif question_id[-4]=='h':
+                    score = [i.get('score') for i in blob_rules_data if i.get('level').lower() == 'level3'][0]
         student_practiceMCQ_answer ,created= student_practiceMCQ_answers.objects.using('mongodb'
                                                             ).get_or_create(student_id = student_id,
                                                                  question_id = question_id,
@@ -261,7 +258,7 @@ def submit_MCQ_Question(request):
                                                                      'correct_ans': data.get('correct_ans'),
                                                                      'entered_ans': data.get('entered_ans'),
                                                                      'subject_id':data.get('subject_id'),
-                                                                     'score':int(score),
+                                                                     'score':score,
                                                                      'answered_time':timezone.now() + timedelta(hours=5, minutes=30)
                                                                  })
         response ={'message':'Already Submited'}
@@ -301,7 +298,7 @@ def submit_MCQ_Question(request):
             student.save()
             student_info.student_score = int(student_info.student_score) + int(score)
             student_info.save()
-            response ={'message':'Submited','score':str(student_practiceMCQ_answer.score)+'/'+str(outoff)}
+            response ={'message':'Submited'}
         return JsonResponse(response,safe=False,status=200)
     except Exception as e:
         print(e)
